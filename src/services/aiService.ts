@@ -51,7 +51,6 @@ interface DataStatistics {
   // Phân bố theo category
   byRepairType: Array<{ type: string; count: number; cost: number; percentage: number }>;
   byWorkshop: Array<{ workshop: string; count: number; cost: number; percentage: number }>;
-  byStatus: Array<{ status: string; count: number; percentage: number }>;
   
   // Top items
   topVehiclesByCost: Array<{ vehicle: string; cost: number; count: number }>;
@@ -111,7 +110,7 @@ export class AIService {
    * Helper: Create data hash for cache invalidation
    */
   private createDataHash(data: RepairData[]): string {
-    return `${data.length}_${data[0]?.id || ''}_${data[data.length - 1]?.id || ''}`;
+    return `${data.length}_${data[0]?.repair_no || ''}_${data[data.length - 1]?.repair_no || ''}`;
   }
 
   /**
@@ -144,7 +143,6 @@ export class AIService {
     const vehicleMap = new Map<string, { count: number; cost: number }>();
     const repairTypeMap = new Map<string, { count: number; cost: number }>();
     const workshopMap = new Map<string, { count: number; cost: number }>();
-    const statusMap = new Map<string, number>();
     const monthMap = new Map<string, { count: number; cost: number }>();
     const quarterMap = new Map<string, { count: number; cost: number }>();
 
@@ -152,7 +150,7 @@ export class AIService {
     for (const item of data) {
       const cost = this.parseCost(item.tong_chi_phi_sau_vat);
       const laborCost = this.parseCost(item.chi_phi_nhan_cong);
-      const materialCost = this.parseCost(item.chi_phi_vat_tu);
+      const materialCost = this.parseCost(item.thanh_toan_vat_tu_xnk);
       
       // Totals
       totalCost += cost;
@@ -190,10 +188,6 @@ export class AIService {
       workshopData.count++;
       workshopData.cost += cost;
       workshopMap.set(workshop, workshopData);
-
-      // Group by status
-      const status = item.trang_thai || 'N/A';
-      statusMap.set(status, (statusMap.get(status) || 0) + 1);
 
       // Group by month
       const dateStr = item.ngay_gio_yeu_cau;
@@ -265,15 +259,6 @@ export class AIService {
           percentage: (data.cost / totalCost) * 100
         }))
         .sort((a, b) => b.cost - a.cost),
-
-      // By status
-      byStatus: Array.from(statusMap.entries())
-        .map(([status, count]) => ({
-          status,
-          count,
-          percentage: (count / totalRecords) * 100
-        }))
-        .sort((a, b) => b.count - a.count),
 
       // Top vehicles by cost
       topVehiclesByCost: Array.from(vehicleMap.entries())
@@ -392,14 +377,6 @@ ${summary}
       lines.push('\n【LOẠI SỬA CHỮA PHỔ BIẾN】');
       for (const r of stats.byRepairType.slice(0, 7)) {
         lines.push(`• ${r.type}: ${r.count} (${r.percentage.toFixed(1)}%), ${this.formatCurrency(r.cost)}`);
-      }
-    }
-
-    // === TRẠNG THÁI ===
-    if (stats.byStatus.length > 0) {
-      lines.push('\n【TRẠNG THÁI YÊU CẦU】');
-      for (const s of stats.byStatus) {
-        lines.push(`• ${s.status}: ${s.count} (${s.percentage.toFixed(1)}%)`);
       }
     }
 

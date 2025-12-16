@@ -24,7 +24,6 @@ export const StatCards: React.FC<StatCardsProps> = ({ data }) => {
   };
   
   const totalCost = data.reduce((sum, item) => sum + parseCost(item.tong_chi_phi_sau_vat), 0);
-  const avgCost = totalRecords > 0 ? totalCost / totalRecords : 0;
   
   // Đếm số xe unique
   const uniqueVehicles = new Set(data.map(item => item.phuong_tien_can_sua_chua).filter(Boolean)).size;
@@ -42,10 +41,6 @@ export const StatCards: React.FC<StatCardsProps> = ({ data }) => {
   const avgRepairTime = repairTimesInHours.length > 0
     ? repairTimesInHours.reduce((sum, h) => sum + h, 0) / repairTimesInHours.length
     : 0;
-  
-  // Tính số yêu cầu bị từ chối
-  const rejectedCount = data.filter(item => item.tu_choi_yeu_cau === true).length;
-  const rejectionRate = totalRecords > 0 ? (rejectedCount / totalRecords * 100) : 0;
   
   const stats = [
     {
