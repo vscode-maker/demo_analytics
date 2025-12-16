@@ -3,6 +3,7 @@ import { Layout, Space, Empty } from 'antd';
 import { Header } from './layout/Header';
 import { LeftSidebar } from './layout/LeftSidebar';
 import { RightChatPanel } from './layout/RightChatPanel';
+import { MobileTabBar } from './layout/MobileTabBar';
 import { StatCards } from './dashboard/StatCards';
 import { FilterBar, FilterValues } from './dashboard/FilterBar';
 import { Charts } from './charts/Charts';
@@ -63,6 +64,17 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
   const [filteredData, setFilteredData] = useState<RepairData[]>([]);
   const [allData, setAllData] = useState<RepairData[]>([]);
   const [activeFilters, setActiveFilters] = useState<FilterValues | null>(null);
+  const [mobileTab, setMobileTab] = useState<'import' | 'report' | 'chat'>('report');
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  // Detect mobile/desktop
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   
   // Load dữ liệu từ selected imports (gộp nhiều file)
   useEffect(() => {
@@ -136,21 +148,52 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
       <Header onLogout={onLogout} />
       
       <Layout style={{ marginTop: 56 }}>
-        <LeftSidebar onImportSuccess={() => {
-          // Reload data sau khi import
-          const history = sheetService.getImportHistory();
-          if (history.length > 0 && history[0].status === 'completed') {
-            const data = sheetService.getRepairData(history[0].id);
-            setAllData(data);
-            setFilteredData(data);
-          }
-        }} />
+        {/* Desktop: Always show sidebars */}
+        {!isMobile && (
+          <>
+            <LeftSidebar onImportSuccess={() => {
+              // Reload data sau khi import
+              const history = sheetService.getImportHistory();
+              if (history.length > 0 && history[0].status === 'completed') {
+                const data = sheetService.getRepairData(history[0].id);
+                setAllData(data);
+                setFilteredData(data);
+              }
+            }} />
+          </>
+        )}
+
+        {/* Mobile: Show LeftSidebar only when import tab is active */}
+        {isMobile && mobileTab === 'import' && (
+          <div style={{
+            position: 'fixed',
+            top: 56,
+            left: 0,
+            right: 0,
+            bottom: 60,
+            zIndex: 100,
+            overflow: 'auto',
+            background: '#fff'
+          }}>
+            <LeftSidebar onImportSuccess={() => {
+              const history = sheetService.getImportHistory();
+              if (history.length > 0 && history[0].status === 'completed') {
+                const data = sheetService.getRepairData(history[0].id);
+                setAllData(data);
+                setFilteredData(data);
+              }
+            }} />
+          </div>
+        )}
         
-        <Content 
-          style={{ 
-            marginLeft: 320,
-            marginRight: 340,
-            padding: 24,
+        {/* Main Content - Show only on desktop or when report tab is active on mobile */}
+        {(!isMobile || mobileTab === 'report') && (
+          <Content 
+            style={{ 
+              marginLeft: isMobile ? 0 : 320,
+              marginRight: isMobile ? 0 : 340,
+              padding: isMobile ? 12 : 24,
+              paddingBottom: isMobile ? 72 : 24,
             background: '#f0f2f5',
             minHeight: 'calc(100vh - 64px)'
           }}
@@ -230,8 +273,34 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
             </Space>
           )}
         </Content>
+        )}
         
-        <RightChatPanel />
+        {/* Desktop: Always show chat panel */}
+        {!isMobile && <RightChatPanel />}
+        
+        {/* Mobile: Show chat panel only when chat tab is active */}
+        {isMobile && mobileTab === 'chat' && (
+          <div style={{
+            position: 'fixed',
+            top: 56,
+            left: 0,
+            right: 0,
+            bottom: 60,
+            zIndex: 100,
+            overflow: 'auto',
+            background: '#f8f9fa'
+          }}>
+            <RightChatPanel />
+          </div>
+        )}
+        
+        {/* Mobile: Tab bar */}
+        {isMobile && (
+          <MobileTabBar 
+            activeTab={mobileTab} 
+            onTabChange={setMobileTab} 
+          />
+        )}
       </Layout>
     </Layout>
   );

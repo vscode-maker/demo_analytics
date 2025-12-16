@@ -22,6 +22,13 @@ export const RightChatPanel: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const { activeImport, selectedImports } = useStore();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   
   // Check if có dữ liệu (từ multi-select hoặc single)
   const hasData = selectedImports.length > 0 || (activeImport && activeImport.status === 'completed');
@@ -89,14 +96,14 @@ export const RightChatPanel: React.FC = () => {
   
   return (
     <Sider 
-      width={340} 
+      width={isMobile ? '100%' : 340}
       style={{ 
-        background: '#fff',
-        borderLeft: '1px solid #f0f0f0',
-        height: 'calc(100vh - 56px)',
-        position: 'fixed',
-        right: 0,
-        top: 56,
+        background: '#f8f9fa',
+        borderLeft: isMobile ? 'none' : '1px solid #e8eaed',
+        height: isMobile ? '100%' : 'calc(100vh - 56px)',
+        position: isMobile ? 'relative' : 'fixed',
+        right: isMobile ? 'auto' : 0,
+        top: isMobile ? 0 : 56,
         display: 'flex',
         flexDirection: 'column'
       }}

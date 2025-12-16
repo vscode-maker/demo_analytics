@@ -1,6 +1,7 @@
 import { Layout, Space } from 'antd';
 import { ImportSheet } from '../import/ImportSheet';
 import { ImportHistory } from '../import/ImportHistory';
+import { useState, useEffect } from 'react';
 
 const { Sider } = Layout;
 
@@ -9,17 +10,25 @@ interface LeftSidebarProps {
 }
 
 export const LeftSidebar: React.FC<LeftSidebarProps> = ({ onImportSuccess }) => {
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   return (
     <Sider 
-      width={320} 
+      width={isMobile ? '100%' : 320}
       style={{ 
         background: '#fff',
-        borderRight: '1px solid #f0f0f0',
+        borderRight: isMobile ? 'none' : '1px solid #f0f0f0',
         overflow: 'auto',
-        height: 'calc(100vh - 64px)',
-        position: 'fixed',
-        left: 0,
-        top: 64
+        height: isMobile ? '100%' : 'calc(100vh - 64px)',
+        position: isMobile ? 'relative' : 'fixed',
+        left: isMobile ? 'auto' : 0,
+        top: isMobile ? 0 : 64
       }}
     >
       <div style={{ padding: 16 }}>

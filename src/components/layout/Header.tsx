@@ -4,6 +4,7 @@ import {
   LogoutOutlined
 } from '@ant-design/icons';
 import { authService } from '../../services/authService';
+import { useState, useEffect } from 'react';
 
 const { Header: AntHeader } = Layout;
 const { Text } = Typography;
@@ -14,6 +15,13 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ onLogout }) => {
   const user = authService.getUser();
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   
   const menuItems = [
     {
@@ -57,7 +65,7 @@ export const Header: React.FC<HeaderProps> = ({ onLogout }) => {
       <Dropdown menu={{ items: menuItems }} placement="bottomRight">
         <Space size={8} style={{ cursor: 'pointer' }}>
           <Avatar size={28} icon={<UserOutlined />} style={{ backgroundColor: '#1890ff' }} />
-          <Text style={{ fontSize: 13 }}>{user?.username || 'Admin'}</Text>
+          {!isMobile && <Text style={{ fontSize: 13 }}>{user?.username || 'Admin'}</Text>}
         </Space>
       </Dropdown>
     </AntHeader>
